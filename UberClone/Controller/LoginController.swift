@@ -21,6 +21,28 @@ class LoginController: UIViewController{
         return label
     }()
     
+    private lazy var emailContainerView : UIView = {
+        let view = UIView().inputContainerView(image: #imageLiteral(resourceName: "ic_mail_outline_white_2x"), textField: emailTextfield)
+        view.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        return view
+    }()
+    
+    private lazy var passwordContainerView : UIView = {
+        let view = UIView().inputContainerView(image: #imageLiteral(resourceName: "ic_lock_outline_white_2x"), textField: passwordTextfield)
+        view.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        return view
+       }()
+    
+    private let emailTextfield : UITextField = {
+        return UITextField().textField(withPlaceholder: "Email",
+                                       isSecureTextEntry: false)
+    }()
+    
+    private let passwordTextfield : UITextField = {
+        return UITextField().textField(withPlaceholder: "Password",
+                                       isSecureTextEntry: true)
+    }()
+    
     //MARK: LifeCycles
     
     override func viewDidLoad() {
@@ -31,6 +53,22 @@ class LoginController: UIViewController{
         view.addSubview(titleLabel)
         titleLabel.anchor(top: view.safeAreaLayoutGuide.topAnchor)
         titleLabel.centerX(inView: view)
+        
+        
+        let stack = UIStackView(arrangedSubviews: [emailContainerView,passwordContainerView])
+        stack.axis = .vertical
+        stack.distribution = .fillEqually
+        stack.spacing = 16
+        
+        view.addSubview(stack)
+        stack.anchor(top: titleLabel.bottomAnchor, left: view.leftAnchor, right: view.rightAnchor,
+                     paddingTop: 40, paddingLeft: 16, paddingBottom: 0, paddingRight: 16)
+        
+//        view.addSubview(emailContainerView)
+//        emailContainerView.anchor(top: titleLabel.bottomAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 40, paddingLeft: 16, paddingBottom: 0, paddingRight: 16,height: 50)
+//
+//        view.addSubview(passwordContainerView)
+//        passwordContainerView.anchor(top: emailContainerView.bottomAnchor, left: view.leftAnchor, right: view.rightAnchor, paddingTop: 16, paddingLeft: 16, paddingBottom: 0, paddingRight: 16,height: 50)
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle{

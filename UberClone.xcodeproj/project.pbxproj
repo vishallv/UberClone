@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		70E51D975216A82C05371804 /* Pods_UberClone.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E0E597D0D233541944A92F10 /* Pods_UberClone.framework */; };
 		C90B2B8323DCB5ED009A0EBE /* HomeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90B2B8223DCB5ED009A0EBE /* HomeController.swift */; };
+		C90B2B8523DD23AB009A0EBE /* LocationInputActivationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90B2B8423DD23AB009A0EBE /* LocationInputActivationView.swift */; };
+		C90B2B8723DD30A7009A0EBE /* LocationInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90B2B8623DD30A7009A0EBE /* LocationInputView.swift */; };
+		C90B2B8923DE0E06009A0EBE /* LocationCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90B2B8823DE0E06009A0EBE /* LocationCell.swift */; };
 		C9D6988F23DB60A500D6C23E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D6988E23DB60A500D6C23E /* AppDelegate.swift */; };
 		C9D6989123DB60A500D6C23E /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D6989023DB60A500D6C23E /* SceneDelegate.swift */; };
 		C9D6989623DB60A500D6C23E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C9D6989423DB60A500D6C23E /* Main.storyboard */; };
@@ -25,6 +28,9 @@
 		76E1E663C25273FEA66FE322 /* Pods-UberClone.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UberClone.release.xcconfig"; path = "Target Support Files/Pods-UberClone/Pods-UberClone.release.xcconfig"; sourceTree = "<group>"; };
 		7F7A2441B1257D54FC3E19A1 /* Pods-UberClone.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UberClone.debug.xcconfig"; path = "Target Support Files/Pods-UberClone/Pods-UberClone.debug.xcconfig"; sourceTree = "<group>"; };
 		C90B2B8223DCB5ED009A0EBE /* HomeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeController.swift; sourceTree = "<group>"; };
+		C90B2B8423DD23AB009A0EBE /* LocationInputActivationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationInputActivationView.swift; sourceTree = "<group>"; };
+		C90B2B8623DD30A7009A0EBE /* LocationInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationInputView.swift; sourceTree = "<group>"; };
+		C90B2B8823DE0E06009A0EBE /* LocationCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationCell.swift; sourceTree = "<group>"; };
 		C9D6988B23DB60A500D6C23E /* UberClone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UberClone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9D6988E23DB60A500D6C23E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C9D6989023DB60A500D6C23E /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -135,6 +141,9 @@
 			isa = PBXGroup;
 			children = (
 				C9D698AE23DBCF7900D6C23E /* AuthButton.swift */,
+				C90B2B8423DD23AB009A0EBE /* LocationInputActivationView.swift */,
+				C90B2B8623DD30A7009A0EBE /* LocationInputView.swift */,
+				C90B2B8823DE0E06009A0EBE /* LocationCell.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -276,9 +285,12 @@
 				C9D698AD23DBC0AB00D6C23E /* SignUpController.swift in Sources */,
 				C9D698AF23DBCF7900D6C23E /* AuthButton.swift in Sources */,
 				C90B2B8323DCB5ED009A0EBE /* HomeController.swift in Sources */,
+				C90B2B8723DD30A7009A0EBE /* LocationInputView.swift in Sources */,
 				C9D6988F23DB60A500D6C23E /* AppDelegate.swift in Sources */,
 				C9D698A923DB63AD00D6C23E /* LoginController.swift in Sources */,
+				C90B2B8923DE0E06009A0EBE /* LocationCell.swift in Sources */,
 				C9D6989123DB60A500D6C23E /* SceneDelegate.swift in Sources */,
+				C90B2B8523DD23AB009A0EBE /* LocationInputActivationView.swift in Sources */,
 				C9D698AB23DB837700D6C23E /* extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

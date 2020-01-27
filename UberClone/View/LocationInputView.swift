@@ -16,6 +16,14 @@ class LocationInputView: UIView {
 
   //MARK: Propperties
     
+    var user : User? {
+        
+        didSet{
+             titleLable.text = user?.fullname
+        }
+       
+    }
+    
     private let backButton : UIButton = {
         let button = UIButton()
         button.setImage(#imageLiteral(resourceName: "baseline_arrow_back_black_36dp").withRenderingMode(.alwaysOriginal), for: .normal)
@@ -25,9 +33,8 @@ class LocationInputView: UIView {
     }()
     
     
-    private let titleLable : UILabel = {
+     private let titleLable : UILabel = {
         let label = UILabel()
-        label.text = "Vishal Lakshmi"
         label.textColor = .darkGray
         label.font = UIFont.systemFont(ofSize: 16)
         return label

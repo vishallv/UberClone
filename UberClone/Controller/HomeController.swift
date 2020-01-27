@@ -22,18 +22,32 @@ class HomeController : UIViewController{
     private let tableView = UITableView()
     
     private final let locationInputViewHeight : CGFloat = 200
+    
+    private var user : User? {
+        didSet{
+            
+            locationInputView.user = user
+        }
+    }
     //MARK: Life Cycles
     
     override func viewDidLoad() {
         super.viewDidLoad()
         checkIfUserIsLoggedIn()
         enableLocationService()
+        fetchUserData()
 //        signOut()
         
         
     }
     
     //MARK: API
+    
+    func fetchUserData(){
+        Service.shared.fetchUserData { (user) in
+            self.user = user
+        }
+    }
     
     func checkIfUserIsLoggedIn(){
         
@@ -108,7 +122,9 @@ class HomeController : UIViewController{
             self.locationInputView.alpha = 1
         }) { _ in
             
-            print("present table view")
+            UIView.animate(withDuration: 0.3) {
+                self.tableView.frame.origin.y = self.locationInputViewHeight
+            }
         }
         
         
@@ -121,6 +137,7 @@ class HomeController : UIViewController{
         tableView.register(LocationCell.self, forCellReuseIdentifier: reuseIdentifier)
         
         tableView.rowHeight = 60
+        tableView.tableFooterView = UIView()
         
         let height = view.frame.height - locationInputViewHeight
         tableView.frame = CGRect(x: 0, y: view.frame.height, width: view.frame.width, height: height)
@@ -181,12 +198,15 @@ extension HomeController : LocationInputActivationViewDelegate{
 
 extension HomeController : LocationInputViewDelegate{
     func dismissLocationInputView() {
+        
         UIView.animate(withDuration: 0.3, animations: {
             self.locationInputView.alpha = 0
+            
+            self.tableView.frame.origin.y = self.view.frame.height
            
         }) { _ in
 //            print("remove table view")
-            
+            self.locationInputView.removeFromSuperview()
             UIView.animate(withDuration: 0.3) {
                 self.inputActivationView.alpha = 1
             }
@@ -197,9 +217,19 @@ extension HomeController : LocationInputViewDelegate{
     
 }
 
+//MARK: UITableViewDelegate
+
 extension HomeController : UITableViewDelegate,UITableViewDataSource{
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return "Test"
+    }
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 2
+    }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 10
+        
+        return section == 0 ? 2 : 5
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

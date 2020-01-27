@@ -16,7 +16,7 @@ class HomeController : UIViewController{
     //MARK: Properties
     
     private let mapView = MKMapView()
-    private let locationManager = CLLocationManager()
+    private let locationManager = LocationHandler.shared.locationManager
     private let inputActivationView = LocationInputActivationView()
     private let locationInputView = LocationInputView()
     private let tableView = UITableView()
@@ -73,6 +73,15 @@ class HomeController : UIViewController{
         
         do{
             try Auth.auth().signOut()
+            
+            DispatchQueue.main.async {
+                 let navController = UINavigationController(rootViewController: LoginController())
+                if #available(iOS 13, *){
+                    navController.isModalInPresentation = true
+                }
+                navController.modalPresentationStyle = .fullScreen
+                self.present(navController, animated: true, completion: nil)
+            }
         }
         catch{
             print("Error to sign out user")
@@ -152,35 +161,31 @@ class HomeController : UIViewController{
 
 //MARK: LocationServices
 
-extension HomeController: CLLocationManagerDelegate {
+extension HomeController {
     func enableLocationService(){
         
-        locationManager.delegate = self
+//        locationManager.delegate = self
         
         switch CLLocationManager.authorizationStatus(){
             
         case .notDetermined:
-            locationManager.requestWhenInUseAuthorization()
+            locationManager?.requestWhenInUseAuthorization()
         case .restricted,.denied:
             break
         case .authorizedAlways:
             print("authorized Always")
-            locationManager.startUpdatingLocation()
-            locationManager.desiredAccuracy = kCLLocationAccuracyBest
+            locationManager?.startUpdatingLocation()
+            locationManager?.desiredAccuracy = kCLLocationAccuracyBest
         case .authorizedWhenInUse:
             print("authorized When In Use")
-            locationManager.requestAlwaysAuthorization()
+            locationManager?.requestAlwaysAuthorization()
         @unknown default:
             break
         }
     }
     
     
-    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        if status == .authorizedWhenInUse{
-            locationManager.requestAlwaysAuthorization()
-        }
-    }
+    
 }
 
 

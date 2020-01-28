@@ -36,6 +36,7 @@ class HomeController : UIViewController{
         checkIfUserIsLoggedIn()
         enableLocationService()
         fetchUserData()
+        fetchDrivers()
 //        signOut()
         
         
@@ -43,8 +44,26 @@ class HomeController : UIViewController{
     
     //MARK: API
     
+    func fetchDrivers(){
+        guard let location = locationManager?.location else{return}
+//        Service.shared.fetchDrivers(location: location)
+        Service.shared.fetchDrivers(location: location) { (driver) in
+            guard let coordinate = driver.location?.coordinate else {return}
+            print("DEBUG: Sucess annotation")
+            print("DEBUG: Sucess annotation \(coordinate)")
+            let annotation = DriverAnnotation(uid: driver.uid, coordinate: coordinate)
+            
+            
+            self.mapView.addAnnotation(annotation)
+//            self.mapView.showAnnotations(self.mapView.annotations, animated: true)
+            
+            
+        }
+    }
+    
     func fetchUserData(){
-        Service.shared.fetchUserData { (user) in
+        guard let currnetUid = Auth.auth().currentUser?.uid else {return}
+        Service.shared.fetchUserData(uid: currnetUid) { (user) in
             self.user = user
         }
     }

@@ -7,6 +7,8 @@
 //
 
 import Firebase
+import CoreLocation
+import GeoFire
 
 let DB_REF = Database.database().reference()
 let REF_USERS = DB_REF.child("users")
@@ -16,14 +18,50 @@ struct Service {
     
     static let shared = Service()
 
-    func fetchUserData(completion: @escaping(User)->Void){
-        guard let currentUid = Auth.auth().currentUser?.uid else{return}
-        REF_USERS.child(currentUid).observeSingleEvent(of: .value) { (snapshot) in
+    func fetchUserData(uid: String ,completion: @escaping(User)->Void){
+       
+        REF_USERS.child(uid).observeSingleEvent(of: .value) { (snapshot) in
             guard let dictionary = snapshot.value as? [String:Any] else{return}
-            let user = User(dictionary: dictionary)
+            let uid = snapshot.key
+            let user = User(uid: uid, dictionary: dictionary)
             
             completion(user)
             
         }
+    }
+    
+    func fetchDrivers(location: CLLocation, completion : @escaping(User) -> Void ){
+//        , completion : @escaping(User) -> Void
+        let geofire = GeoFire(firebaseRef: REF_DRIVER_LOCATIONS)
+            
+            
+        
+        REF_DRIVER_LOCATIONS.observe(.value) { (snapshot) in
+
+
+//            print(location.coordinate)
+//
+//             geofire.query(at: location, withRadius: 50).observe(.keyEntered,with : { (uid, location) in
+//                print("DEBUG: Sucess geofire...")
+//                print(uid)
+//                print(location.coordinate)
+//            })
+            
+            geofire.query(at: location, withRadius: 50).observe(.keyEntered,with:  { (uid, driverLocation) in
+                print("DEBUG: Sucess geofire...")
+                print(uid)
+                print(location.coordinate)
+                
+                
+                self.fetchUserData(uid: uid) { (user) in
+                    print("DEBUG: Sucess geofire")
+                    var driver = user
+                    driver.location = driverLocation
+                    completion(driver)
+                }
+
+            })
+        }
+        
     }
 }

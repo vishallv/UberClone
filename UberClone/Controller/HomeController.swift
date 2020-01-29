@@ -10,6 +10,7 @@ import UIKit
 import Firebase
 import MapKit
 private let reuseIdentifier = "LocationCell"
+private let annotationIdentifier = "DriverAnnotation"
 
 class HomeController : UIViewController{
     
@@ -20,6 +21,7 @@ class HomeController : UIViewController{
     private let inputActivationView = LocationInputActivationView()
     private let locationInputView = LocationInputView()
     private let tableView = UITableView()
+    private var searchResults = [MKPlacemark]()
     
     private final let locationInputViewHeight : CGFloat = 200
     
@@ -35,8 +37,7 @@ class HomeController : UIViewController{
         super.viewDidLoad()
         checkIfUserIsLoggedIn()
         enableLocationService()
-        fetchUserData()
-        fetchDrivers()
+
 //        signOut()
         
         
@@ -49,12 +50,34 @@ class HomeController : UIViewController{
 //        Service.shared.fetchDrivers(location: location)
         Service.shared.fetchDrivers(location: location) { (driver) in
             guard let coordinate = driver.location?.coordinate else {return}
-            print("DEBUG: Sucess annotation")
-            print("DEBUG: Sucess annotation \(coordinate)")
+//            print("DEBUG: Sucess annotation")
+//            print("DEBUG: Sucess annotation \(coordinate)")
             let annotation = DriverAnnotation(uid: driver.uid, coordinate: coordinate)
             
             
-            self.mapView.addAnnotation(annotation)
+            var driverIsVisible : Bool {
+                
+                return self.mapView.annotations.contains { (annotation) -> Bool in
+                    
+                    guard let driverAnnotation = annotation as? DriverAnnotation else{return false}
+                    
+                    if driverAnnotation.uid == driver.uid{
+                        //Update location
+                        driverAnnotation.updateAnnotationPosition(withCoordinate: coordinate)
+                        return true
+                    }
+                    
+                        return false
+                    
+                }
+                
+            }
+            
+            if !driverIsVisible{
+                self.mapView.addAnnotation(annotation)
+            }
+            
+            
 //            self.mapView.showAnnotations(self.mapView.annotations, animated: true)
             
             
@@ -83,7 +106,7 @@ class HomeController : UIViewController{
            
         }
         else{
-           configureUI()
+          configure()
         }
         
     }
@@ -112,6 +135,13 @@ class HomeController : UIViewController{
     
     //MARK: Helper Functions
     
+    func configure(){
+        configureUI()
+        fetchUserData()
+        fetchDrivers()
+        
+    }
+    
     func configureUI(){
         configureMapView()
         
@@ -135,6 +165,7 @@ class HomeController : UIViewController{
         
         mapView.showsUserLocation = true
         mapView.userTrackingMode = .follow
+        mapView.delegate = self
     }
     
     func configureLocationInputView(){
@@ -176,7 +207,47 @@ class HomeController : UIViewController{
     
 }
 
+//MARK: Map Helper function
 
+private extension HomeController{
+ 
+    func searchBy(naturalLanguageQuery : String , completion : @escaping([MKPlacemark])->Void){
+        
+        var results = [MKPlacemark]()
+        
+        let request = MKLocalSearch.Request()
+        request.region = mapView.region
+        request.naturalLanguageQuery = naturalLanguageQuery
+        
+        let search = MKLocalSearch(request: request)
+        search.start { (response, error) in
+            
+            guard let response = response else {return}
+            
+            response.mapItems.forEach { item in
+            
+                results.append(item.placemark)
+            }
+            completion(results)
+        }
+    }
+}
+
+
+
+//MARK: MkMapviewDelagate
+
+extension HomeController : MKMapViewDelegate{
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        if let annotation = annotation as? DriverAnnotation{
+            
+            let view = MKAnnotationView(annotation: annotation, reuseIdentifier: annotationIdentifier)
+            view.image = #imageLiteral(resourceName: "chevron-sign-to-right")
+            return view
+        }
+        return nil
+    }
+}
 
 //MARK: LocationServices
 
@@ -221,6 +292,14 @@ extension HomeController : LocationInputActivationViewDelegate{
 //MARK: LocationInputViewDelegate
 
 extension HomeController : LocationInputViewDelegate{
+    func executeSearch(query: String) {
+        
+        searchBy(naturalLanguageQuery: query) { (placemark) in
+            self.searchResults = placemark
+            self.tableView.reloadData()
+        }
+    }
+    
     func dismissLocationInputView() {
         
         UIView.animate(withDuration: 0.3, animations: {
@@ -253,12 +332,17 @@ extension HomeController : UITableViewDelegate,UITableViewDataSource{
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return section == 0 ? 2 : 5
+        return section == 0 ? 2 : searchResults.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath) as! LocationCell
+        
+        if indexPath.section == 1{
+            
+        cell.placemark = searchResults[indexPath.row]
+        }
         
         return cell
     }

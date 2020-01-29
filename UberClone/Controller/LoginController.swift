@@ -92,7 +92,7 @@ class LoginController: UIViewController{
                 return
             }
             guard let controller = UIApplication.shared.keyWindow?.rootViewController as? HomeController else {return}
-            controller.configureUI()
+            controller.configure()
             self.dismiss(animated: true, completion: nil)
         }
     }

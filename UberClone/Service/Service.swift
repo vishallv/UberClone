@@ -48,13 +48,13 @@ struct Service {
 //            })
             
             geofire.query(at: location, withRadius: 50).observe(.keyEntered,with:  { (uid, driverLocation) in
-                print("DEBUG: Sucess geofire...")
-                print(uid)
-                print(location.coordinate)
+//                print("DEBUG: Sucess geofire...")
+//                print(uid)
+//                print(location.coordinate)
                 
                 
                 self.fetchUserData(uid: uid) { (user) in
-                    print("DEBUG: Sucess geofire")
+//                    print("DEBUG: Sucess geofire")
                     var driver = user
                     driver.location = driverLocation
                     completion(driver)

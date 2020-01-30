@@ -12,6 +12,15 @@ import MapKit
 private let reuseIdentifier = "LocationCell"
 private let annotationIdentifier = "DriverAnnotation"
 
+private enum ActionbuttonConfiguration {
+    case showMenu
+    case dismissActionView
+    
+    init() {
+        self = .showMenu
+    }
+}
+
 class HomeController : UIViewController{
     
     //MARK: Properties
@@ -22,6 +31,8 @@ class HomeController : UIViewController{
     private let locationInputView = LocationInputView()
     private let tableView = UITableView()
     private var searchResults = [MKPlacemark]()
+    private var actioonButtonConfig = ActionbuttonConfiguration()
+    private var route : MKRoute?
     
     private final let locationInputViewHeight : CGFloat = 200
     
@@ -31,6 +42,13 @@ class HomeController : UIViewController{
             locationInputView.user = user
         }
     }
+    
+    private let actionButton : UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(#imageLiteral(resourceName: "baseline_menu_black_36dp").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.addTarget(self, action: #selector(actionButtonPressed), for: .touchUpInside)
+        return button
+    }()
     //MARK: Life Cycles
     
     override func viewDidLoad() {
@@ -133,6 +151,23 @@ class HomeController : UIViewController{
     //MARK: Hnadlers
     
     
+    @objc func actionButtonPressed(){
+        switch actioonButtonConfig{
+            
+        case .showMenu:
+            print("DEBUG Show Menu")
+        case .dismissActionView:
+           removeAnnotationAndOverlay()
+            
+            UIView.animate(withDuration: 0.3) {
+                self.inputActivationView.alpha = 1
+                self.configureActionButton(config: .showMenu)
+                
+            }
+        
+        }
+    }
+    
     //MARK: Helper Functions
     
     func configure(){
@@ -142,13 +177,30 @@ class HomeController : UIViewController{
         
     }
     
+   fileprivate func configureActionButton(config: ActionbuttonConfiguration){
+       switch config{
+           
+       case .showMenu:
+           self.actionButton.setImage(#imageLiteral(resourceName: "baseline_menu_black_36dp").withRenderingMode(.alwaysOriginal), for: .normal)
+           self.actioonButtonConfig = .showMenu
+       case .dismissActionView:
+           actionButton.setImage(#imageLiteral(resourceName: "baseline_arrow_back_black_36dp").withRenderingMode(.alwaysOriginal), for: .normal)
+           actioonButtonConfig = .dismissActionView
+           
+   }
+    }
+    
     func configureUI(){
         configureMapView()
+        
+        view.addSubview(actionButton)
+        actionButton.anchor(top:view.safeAreaLayoutGuide.topAnchor, left: view.leftAnchor,
+                            paddingTop: 20,paddingLeft: 16,width: 30,height: 30)
         
         view.addSubview(inputActivationView)
         inputActivationView.centerX(inView: view)
         inputActivationView.setDimensions(height: 50, width: view.frame.width-64)
-        inputActivationView.anchor(top:view.safeAreaLayoutGuide.topAnchor,paddingTop: 32)
+        inputActivationView.anchor(top:actionButton.bottomAnchor,paddingTop: 32)
         inputActivationView.alpha = 0
         inputActivationView.delegate = self
         UIView.animate(withDuration: 2) {
@@ -205,6 +257,17 @@ class HomeController : UIViewController{
         view.addSubview(tableView)
     }
     
+    func dismissLocationView(completion : ((Bool) -> Void)? = nil){
+      
+        UIView.animate(withDuration: 0.3, animations: {
+            self.locationInputView.alpha = 0
+            self.tableView.frame.origin.y = self.view.frame.height
+            self.locationInputView.removeFromSuperview()
+            
+                }, completion: completion)
+            }
+    
+    
 }
 
 //MARK: Map Helper function
@@ -231,6 +294,36 @@ private extension HomeController{
             completion(results)
         }
     }
+    
+    func generatePolyline(toDestination destination : MKMapItem){
+        let request = MKDirections.Request()
+        request.source = MKMapItem.forCurrentLocation()
+        request.destination = destination
+        request.transportType = .automobile
+        
+        
+        let directionRequest = MKDirections(request: request)
+        directionRequest.calculate { (response, error) in
+            guard let response = response else {return}
+            self.route = response.routes[0]
+            guard let polyline = self.route?.polyline else {return}
+            
+            self.mapView.addOverlay(polyline)
+        }
+    }
+    
+    func removeAnnotationAndOverlay(){
+        
+        mapView.annotations.forEach { (annotation) in
+            if let annotation  = annotation as? MKPointAnnotation{
+            mapView.removeAnnotation(annotation)
+            }
+        }
+        if mapView.overlays.count > 0{
+            
+            mapView.removeOverlay(mapView.overlays[0])
+        }
+    }
 }
 
 
@@ -246,6 +339,18 @@ extension HomeController : MKMapViewDelegate{
             return view
         }
         return nil
+    }
+    
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        if let route = self.route {
+            
+            let polyline = route.polyline
+            let lineRenderer = MKPolylineRenderer(overlay: polyline)
+            lineRenderer.strokeColor = .mainBlueTint
+            lineRenderer.lineWidth = 4
+            return lineRenderer
+        }
+        return MKOverlayRenderer()
     }
 }
 
@@ -302,19 +407,24 @@ extension HomeController : LocationInputViewDelegate{
     
     func dismissLocationInputView() {
         
-        UIView.animate(withDuration: 0.3, animations: {
-            self.locationInputView.alpha = 0
-            
-            self.tableView.frame.origin.y = self.view.frame.height
-           
-        }) { _ in
-//            print("remove table view")
-            self.locationInputView.removeFromSuperview()
-            UIView.animate(withDuration: 0.3) {
-                self.inputActivationView.alpha = 1
+        dismissLocationView { (_) in
+            UIView.animate(withDuration: 0.5) {
+            self.inputActivationView.alpha = 1
             }
-             
         }
+//        UIView.animate(withDuration: 0.3, animations: {
+//            self.locationInputView.alpha = 0
+//
+//            self.tableView.frame.origin.y = self.view.frame.height
+//
+//        }) { _ in
+////            print("remove table view")
+//            self.locationInputView.removeFromSuperview()
+//            UIView.animate(withDuration: 0.3) {
+//                self.inputActivationView.alpha = 1
+//            }
+//
+//        }
     }
     
     
@@ -345,6 +455,24 @@ extension HomeController : UITableViewDelegate,UITableViewDataSource{
         }
         
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let selectedPlaceMark = searchResults[indexPath.row]
+//        print(selectedPlaceMark.address)
+        self.configureActionButton(config: .dismissActionView)
+        
+        let destination = MKMapItem(placemark: selectedPlaceMark)
+        generatePolyline(toDestination: destination)
+        
+        dismissLocationView { _ in
+            
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = selectedPlaceMark.coordinate
+            
+            self.mapView.addAnnotation(annotation)
+            self.mapView.selectAnnotation(annotation, animated: true)
+        }
     }
     
     

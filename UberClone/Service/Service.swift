@@ -13,6 +13,7 @@ import GeoFire
 let DB_REF = Database.database().reference()
 let REF_USERS = DB_REF.child("users")
 let REF_DRIVER_LOCATIONS = DB_REF.child("driver-locations")
+let REF_TRIP = DB_REF.child("trips")
 
 struct Service {
     
@@ -38,21 +39,9 @@ struct Service {
         
         REF_DRIVER_LOCATIONS.observe(.value) { (snapshot) in
 
-
-//            print(location.coordinate)
-//
-//             geofire.query(at: location, withRadius: 50).observe(.keyEntered,with : { (uid, location) in
-//                print("DEBUG: Sucess geofire...")
-//                print(uid)
-//                print(location.coordinate)
-//            })
             
             geofire.query(at: location, withRadius: 50).observe(.keyEntered,with:  { (uid, driverLocation) in
-//                print("DEBUG: Sucess geofire...")
-//                print(uid)
-//                print(location.coordinate)
-                
-                
+
                 self.fetchUserData(uid: uid) { (user) in
 //                    print("DEBUG: Sucess geofire")
                     var driver = user
@@ -64,4 +53,30 @@ struct Service {
         }
         
     }
+    func uploadTrip(_ pickUpCoordinate: CLLocationCoordinate2D, _ destinationCoordinate : CLLocationCoordinate2D,
+                    completion : @escaping(Error?, DatabaseReference)->Void){
+        guard let uid = Auth.auth().currentUser?.uid else{return}
+        let pickUpArray = [pickUpCoordinate.latitude,pickUpCoordinate.longitude]
+        let destinationArray = [destinationCoordinate.latitude,destinationCoordinate.longitude]
+        
+        let values = ["pickUpCoordinates": pickUpArray,
+        "destinationCoordinates": destinationArray,
+        "state": TripState.requested.rawValue] as [String : Any]
+        
+        REF_TRIP.child(uid).updateChildValues(values, withCompletionBlock: completion)
+        
+    }
+    
+    func observeTrips(completion : @escaping(Trip) -> Void){
+        
+        REF_TRIP.observe(.childAdded) { (snapshot) in
+            guard let dictionary = snapshot.value as? [String: Any] else {return}
+            let uid = snapshot.key
+            
+            let trip = Trip(passengerUid: uid, dictionary: dictionary)
+            completion(trip)
+        }
+    }
+    
+    
 }

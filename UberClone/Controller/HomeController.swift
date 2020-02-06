@@ -43,6 +43,27 @@ class HomeController : UIViewController{
         didSet{
             
             locationInputView.user = user
+            if user?.accountType == .passenger{
+                fetchDrivers()
+                configureLocationActivationView()
+            }
+            else{
+                observeTrips()
+            }
+        }
+    }
+    
+    private var trip : Trip?{
+        didSet{
+            guard let trip = trip else {return}
+            
+            let controller = PickUpController(trip: trip)
+            
+            if #available(iOS 13, *){
+                controller.isModalInPresentation = true
+            }
+            controller.modalPresentationStyle = .fullScreen
+            present(controller, animated: true, completion: nil)
         }
     }
     
@@ -67,6 +88,7 @@ class HomeController : UIViewController{
     //MARK: API
     
     func fetchDrivers(){
+
         guard let location = locationManager?.location else{return}
 //        Service.shared.fetchDrivers(location: location)
         Service.shared.fetchDrivers(location: location) { (driver) in
@@ -102,6 +124,12 @@ class HomeController : UIViewController{
 //            self.mapView.showAnnotations(self.mapView.annotations, animated: true)
             
             
+        }
+    }
+    func observeTrips(){
+        
+        Service.shared.observeTrips { (trip) in
+            self.trip = trip
         }
     }
     
@@ -176,7 +204,7 @@ class HomeController : UIViewController{
     func configure(){
         configureUI()
         fetchUserData()
-        fetchDrivers()
+//        fetchDrivers()
         
     }
     
@@ -200,17 +228,19 @@ class HomeController : UIViewController{
         actionButton.anchor(top:view.safeAreaLayoutGuide.topAnchor, left: view.leftAnchor,
                             paddingTop: 20,paddingLeft: 16,width: 30,height: 30)
         
-        view.addSubview(inputActivationView)
-        inputActivationView.centerX(inView: view)
-        inputActivationView.setDimensions(height: 50, width: view.frame.width-64)
-        inputActivationView.anchor(top:actionButton.bottomAnchor,paddingTop: 32)
-        inputActivationView.alpha = 0
-        inputActivationView.delegate = self
-        UIView.animate(withDuration: 2) {
-            self.inputActivationView.alpha = 1
-        }
-        
         configureTableView()
+    }
+    
+    func configureLocationActivationView(){
+        view.addSubview(inputActivationView)
+               inputActivationView.centerX(inView: view)
+               inputActivationView.setDimensions(height: 50, width: view.frame.width-64)
+               inputActivationView.anchor(top:actionButton.bottomAnchor,paddingTop: 32)
+               inputActivationView.alpha = 0
+               inputActivationView.delegate = self
+               UIView.animate(withDuration: 2) {
+                   self.inputActivationView.alpha = 1
+               }
     }
     
     func configureMapView(){
@@ -246,6 +276,7 @@ class HomeController : UIViewController{
     }
     
     func configureRideActionView(){
+        rideActionView.delegate = self
         view.addSubview(rideActionView)
         rideActionView.frame = CGRect(x: 0, y: view.frame.height , width: view.frame.width, height: rideActionViewHeight)
     }
@@ -517,6 +548,25 @@ extension HomeController : UITableViewDelegate,UITableViewDataSource{
         
         
     }
+    
+    
+}
+
+//MARK: RideActionViewDelegate
+extension HomeController : RideActionViewDelegate{
+    func uploadTrip(_ view: RideActionView) {
+        guard let pickUpCoordinate = locationManager?.location?.coordinate else {return}
+        guard let destiantionCoordinate = view.destination?.coordinate else {return}
+        Service.shared.uploadTrip(pickUpCoordinate, destiantionCoordinate) { (error, ref) in
+            if let error = error{
+                
+                print("DEBUG: \(error.localizedDescription)")
+                return
+            }
+            print("Uploaded to DB Succes")
+        }
+    }
+    
     
     
 }

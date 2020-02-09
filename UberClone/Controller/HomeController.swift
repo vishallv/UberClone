@@ -46,6 +46,7 @@ class HomeController : UIViewController{
             if user?.accountType == .passenger{
                 fetchDrivers()
                 configureLocationActivationView()
+                observeCurrentTrip()
             }
             else{
                 observeTrips()
@@ -55,15 +56,22 @@ class HomeController : UIViewController{
     
     private var trip : Trip?{
         didSet{
-            guard let trip = trip else {return}
+            guard let user = user else {return}
             
-            let controller = PickUpController(trip: trip)
-            
-            if #available(iOS 13, *){
-                controller.isModalInPresentation = true
+            if user.accountType == .driver{
+                guard let trip = trip else {return}
+                
+                let controller = PickUpController(trip: trip)
+                controller.delegate = self
+                if #available(iOS 13, *){
+                    controller.isModalInPresentation = true
+                }
+                controller.modalPresentationStyle = .fullScreen
+                present(controller, animated: true, completion: nil)
             }
-            controller.modalPresentationStyle = .fullScreen
-            present(controller, animated: true, completion: nil)
+            else{
+                print("Show ride acceted")
+            }
         }
     }
     
@@ -74,6 +82,11 @@ class HomeController : UIViewController{
         return button
     }()
     //MARK: Life Cycles
+    
+    override func viewWillAppear(_ animated: Bool) {
+        guard let trip = trip else {return}
+        print(trip.state)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -86,6 +99,26 @@ class HomeController : UIViewController{
     }
     
     //MARK: API
+    
+    func observeCurrentTrip(){
+        
+        Service.shared.observeCurrentTrip { (trip) in
+            self.trip = trip
+            
+            if trip.state == .accepted{
+                self.shouldPresentLoadingView(false)
+                
+                guard let driverUid = trip.driverUid else {return}
+                
+                Service.shared.fetchUserData(uid: driverUid) { (driver) in
+                     self.animateRideActionView(shouldShow: true, config: .tripAccepted,
+                                                user: driver)
+                }
+                
+               
+            }
+        }
+    }
     
     func fetchDrivers(){
 
@@ -306,19 +339,33 @@ class HomeController : UIViewController{
                 }, completion: completion)
             }
     
-    func animateRideActionView(shouldShow: Bool,destination : MKPlacemark? = nil){
+    func animateRideActionView(shouldShow: Bool,destination : MKPlacemark? = nil,config: RideActionViewConfiguration? = nil,
+                               user: User? = nil){
+        
+        //Remove this code if it causes problem later
+//        rideActionView.destination = nil
         
         let yOrigin = shouldShow ? self.view.frame.height - self.rideActionViewHeight : self.view.frame.height
+        UIView.animate(withDuration: 0.3) {
+                       self.rideActionView.frame.origin.y = yOrigin
+                   }
         
         if shouldShow {
-            guard let destination = destination else {return}
-            rideActionView.destination = destination
+            guard let config = config else {return}
+           
             
+            
+            if let destination = destination {
+            rideActionView.destination = destination
+            }
+            
+            if let user = user {
+                rideActionView.user = user
+            }
+        rideActionView.configureUI(withConfig: config)
         }
       
-            UIView.animate(withDuration: 0.3) {
-                self.rideActionView.frame.origin.y = yOrigin
-            }
+           
        
         
     }
@@ -543,7 +590,7 @@ extension HomeController : UITableViewDelegate,UITableViewDataSource{
             
 //            self.mapView.showAnnotations(annotations, animated: true)
             self.mapView.zoomToFit(annotations: annotations)
-            self.animateRideActionView(shouldShow: true,destination: selectedPlaceMark)
+            self.animateRideActionView(shouldShow: true,destination: selectedPlaceMark,config: .requestRide)
         }
         
         
@@ -557,16 +604,57 @@ extension HomeController : RideActionViewDelegate{
     func uploadTrip(_ view: RideActionView) {
         guard let pickUpCoordinate = locationManager?.location?.coordinate else {return}
         guard let destiantionCoordinate = view.destination?.coordinate else {return}
+        
+        shouldPresentLoadingView(true, message: "Finding you a ride")
         Service.shared.uploadTrip(pickUpCoordinate, destiantionCoordinate) { (error, ref) in
             if let error = error{
                 
                 print("DEBUG: \(error.localizedDescription)")
                 return
             }
-            print("Uploaded to DB Succes")
+            
+            UIView.animate(withDuration: 0.3) {
+                self.animateRideActionView(shouldShow: false)
+            }
+//            print("Uploaded to DB Succes")
         }
     }
     
     
     
 }
+
+//MARK: PickUpControllerDelegate
+
+extension HomeController : PickUpControllerDelegate {
+    func didAcceptTrip(_ trip: Trip) {
+        
+//        self.trip?.state = .accepted
+        
+        let anno = MKPointAnnotation()
+        anno.coordinate = trip.pickUpCoordinates
+        mapView.addAnnotation(anno)
+        mapView.selectAnnotation(anno, animated: true)
+        
+        let placemark = MKPlacemark(coordinate: trip.pickUpCoordinates)
+        let mapItem = MKMapItem(placemark: placemark)
+        generatePolyline(toDestination: mapItem)
+        
+        mapView.zoomToFit(annotations: mapView.annotations)
+        
+        
+        self.dismiss(animated: true) {
+            
+            Service.shared.fetchUserData(uid: trip.passengerUid) { (user) in
+                self.animateRideActionView(shouldShow: true,config: .tripAccepted,
+                                           user: user)
+            }
+            
+        }
+    }
+    
+    
+}
+
+
+

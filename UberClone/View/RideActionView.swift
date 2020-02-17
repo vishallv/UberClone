@@ -11,6 +11,7 @@ import MapKit
 protocol RideActionViewDelegate: class {
     
     func uploadTrip(_ view :RideActionView)
+    func cancelTrip()
 }
 
 enum RideActionViewConfiguration {
@@ -42,9 +43,9 @@ enum ButtonAction :CustomStringConvertible{
         case .getDirections:
             return "GET DIRECTIONS"
         case .pickUp:
-            return "PICK UP"
+            return "PICK UP PASSENGER"
         case .dropOff:
-            return "DROP OFF"
+            return "DROP OFF PASSENGER"
         
        
         }
@@ -59,9 +60,13 @@ class RideActionView: UIView {
    //MARK: Properties
     
     weak var delegate : RideActionViewDelegate?
-    var config = RideActionViewConfiguration()
+    
     var buttonAction = ButtonAction()
     var user : User?
+    
+    var config = RideActionViewConfiguration() {
+        didSet { configureUI(withConfig: config)}
+    }
     
     var destination : MKPlacemark? {
         didSet{
@@ -180,7 +185,7 @@ class RideActionView: UIView {
         case .requestRide:
             delegate?.uploadTrip(self)
         case .cancel:
-            print("Handle cancel")
+            delegate?.cancelTrip()
         case .getDirections:
             print("Handle getDirections")
         case .pickUp:
@@ -193,7 +198,7 @@ class RideActionView: UIView {
     
 //MARK: HelperFuction
     
-    func configureUI(withConfig config : RideActionViewConfiguration){
+    private func configureUI(withConfig config : RideActionViewConfiguration){
         
         switch config{
             

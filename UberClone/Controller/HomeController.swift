@@ -362,7 +362,7 @@ class HomeController : UIViewController{
             if let user = user {
                 rideActionView.user = user
             }
-        rideActionView.configureUI(withConfig: config)
+        rideActionView.config = config
         }
       
            
@@ -427,6 +427,18 @@ private extension HomeController{
             mapView.removeOverlay(mapView.overlays[0])
         }
     }
+    
+    func centerMapOnUserLocation(){
+        guard let coordinate = locationManager?.location?.coordinate else{return}
+        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 2000, longitudinalMeters: 2000)
+        mapView.setRegion(region, animated: true)
+        
+    }
+    
+    func setCustomRegion(withCoordinates coordinates :CLLocationCoordinate2D){
+        let region = CLCircularRegion(center: coordinates, radius: 25, identifier: "pickup")
+        locationManager?.startMonitoring(for: region)
+    }
 }
 
 
@@ -434,6 +446,13 @@ private extension HomeController{
 //MARK: MkMapviewDelagate
 
 extension HomeController : MKMapViewDelegate{
+    func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
+        guard let user = self.user else {return}
+        guard user.accountType == .driver else{return}
+        guard let location = userLocation.location else {return}
+        Service.shared.updateDriverLocation(location: location)
+    }
+    
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         if let annotation = annotation as? DriverAnnotation{
             
@@ -457,12 +476,21 @@ extension HomeController : MKMapViewDelegate{
     }
 }
 
-//MARK: LocationServices
+//MARK: CLLocationManagerDelegate
 
-extension HomeController {
+extension HomeController :CLLocationManagerDelegate {
+    
+    func locationManager(_ manager: CLLocationManager, didStartMonitoringFor region: CLRegion) {
+        print("Debug: region start \(region)")
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
+        self.rideActionView.config = .pickUpPassenger
+    }
+    
     func enableLocationService(){
         
-//        locationManager.delegate = self
+        locationManager?.delegate = self
         
         switch CLLocationManager.authorizationStatus(){
             
@@ -601,6 +629,25 @@ extension HomeController : UITableViewDelegate,UITableViewDataSource{
 
 //MARK: RideActionViewDelegate
 extension HomeController : RideActionViewDelegate{
+    func cancelTrip() {
+        Service.shared.cancelTrip { (error, ref) in
+            if let error = error{
+                print("Debug: Error deleting trip... \(error.localizedDescription)")
+                return
+            }
+            
+            self.centerMapOnUserLocation()
+            self.animateRideActionView(shouldShow: false)
+            self.removeAnnotationAndOverlay()
+            
+            self.actionButton.setImage(#imageLiteral(resourceName: "baseline_menu_black_36dp").withRenderingMode(.alwaysOriginal), for: .normal)
+            self.actioonButtonConfig = .showMenu
+            
+            self.inputActivationView.alpha = 1
+            
+        }
+    }
+    
     func uploadTrip(_ view: RideActionView) {
         guard let pickUpCoordinate = locationManager?.location?.coordinate else {return}
         guard let destiantionCoordinate = view.destination?.coordinate else {return}
@@ -636,12 +683,22 @@ extension HomeController : PickUpControllerDelegate {
         mapView.addAnnotation(anno)
         mapView.selectAnnotation(anno, animated: true)
         
+        setCustomRegion(withCoordinates: trip.pickUpCoordinates)
+        
         let placemark = MKPlacemark(coordinate: trip.pickUpCoordinates)
         let mapItem = MKMapItem(placemark: placemark)
         generatePolyline(toDestination: mapItem)
         
         mapView.zoomToFit(annotations: mapView.annotations)
-        
+        Service.shared.observeTripCancelled(trip: trip) {
+            
+            self.removeAnnotationAndOverlay()
+            self.animateRideActionView(shouldShow: false)
+            self.centerMapOnUserLocation()
+            self.presentAlertController(withMessage: "The Passenger has cancelled the trip", withTitle: "Oops!")
+//            self.mapView.zoomToFit(annotations: self.mapView.annotations)
+            
+        }
         
         self.dismiss(animated: true) {
             

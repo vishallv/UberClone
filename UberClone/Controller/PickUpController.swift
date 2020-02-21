@@ -85,15 +85,18 @@ class PickUpController :UIViewController {
     //MARK: Helper Function
     
     func configureMapView(){
+       
         let region = MKCoordinateRegion(center: trip.pickUpCoordinates, latitudinalMeters: 1000, longitudinalMeters: 1000)
         mapView.setRegion(region, animated: false)
         
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = trip.pickUpCoordinates
-        
-        mapView.addAnnotation(annotation)
-        mapView.selectAnnotation(annotation, animated: true)
+//        let annotation = MKPointAnnotation()
+//        annotation.coordinate = trip.pickUpCoordinates
+//
+//        mapView.addAnnotation(annotation)
+//        mapView.selectAnnotation(annotation, animated: true)
+        mapView.addAndSelectAnnotation(forCoordinate: trip.pickUpCoordinates)
     }
+    
     
     func configureUI(){
         view.backgroundColor = .backgroundColor

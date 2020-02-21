@@ -12,11 +12,14 @@ protocol RideActionViewDelegate: class {
     
     func uploadTrip(_ view :RideActionView)
     func cancelTrip()
+    func pickUpPassenger()
+    func dropOffPassenger()
 }
 
 enum RideActionViewConfiguration {
     case requestRide
     case tripAccepted
+    case driverArrived
     case pickUpPassenger
     case tripInProgress
     case endTrip
@@ -189,9 +192,9 @@ class RideActionView: UIView {
         case .getDirections:
             print("Handle getDirections")
         case .pickUp:
-            print("Handle pickUp")
+            delegate?.pickUpPassenger()
         case .dropOff:
-            print("Handle dropOff")
+            delegate?.dropOffPassenger()
        
     }
     }
@@ -222,6 +225,14 @@ class RideActionView: UIView {
             
             infoViewLabel.text = String(user.fullname.first ?? "X")
             uberInfoLabel.text = user.fullname
+        case .driverArrived:
+            guard let user = user else {return}
+            
+            if user.accountType == .driver{
+                titleLabel.text = "Driver Has Arrived"
+                addressLabel.text = "Please meet driver at pickup point"
+            }
+               
             
         case .pickUpPassenger:
             titleLabel.text = "Arrived At Passenger Location"
@@ -253,8 +264,8 @@ class RideActionView: UIView {
                 buttonAction = .dropOff
                 actionButton.setTitle(buttonAction.description, for: .normal)
             }
-        }
-    
+            titleLabel.text = "Arrived At Destination"
+            }
         }
         
     

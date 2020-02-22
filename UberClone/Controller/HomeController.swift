@@ -26,6 +26,10 @@ private enum AnnotationType : String{
     case destination
 }
 
+protocol HomeControllerDelegate : class{
+    func handleMenuToggle()
+}
+
 class HomeController : UIViewController{
     
     //MARK: Properties
@@ -43,8 +47,10 @@ class HomeController : UIViewController{
     private final let locationInputViewHeight : CGFloat = 200
     private final let rideActionViewHeight : CGFloat = 300
     
+    weak var delegate : HomeControllerDelegate?
     
-    private var user : User? {
+    
+     var user : User? {
         didSet{
             
             locationInputView.user = user
@@ -95,19 +101,20 @@ class HomeController : UIViewController{
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        checkIfUserIsLoggedIn()
+//        checkIfUserIsLoggedIn()
         enableLocationService()
+        configureUI()
 
 //        signOut()
         
         
     }
     
-    //MARK: API
+    //MARK: Passenger API
     
     func observeCurrentTrip(){
         
-        Service.shared.observeCurrentTrip { (trip) in
+        PassengerService.shared.observeCurrentTrip { (trip) in
             self.trip = trip
             guard let state = trip.state else {return}
             guard let driverUid = trip.driverUid else {return}
@@ -132,10 +139,16 @@ class HomeController : UIViewController{
             case .arrivedAtDestination:
                 self.rideActionView.config = .endTrip
             case .completed:
-                self.animateRideActionView(shouldShow: false)
-                self.centerMapOnUserLocation()
-                self.configureActionButton(config: .showMenu)
-                self.presentAlertController(withMessage: "Trip Completed", withTitle: "We hope you had a nice trip!!")
+                
+                
+                PassengerService.shared.deleteTrip { (erre, ref) in
+                   
+                    self.animateRideActionView(shouldShow: false)
+                    self.centerMapOnUserLocation()
+                    self.configureActionButton(config: .showMenu)
+                    self.inputActivationView.alpha = 1
+                    self.presentAlertController(withMessage: "Trip Completed", withTitle: "We hope you had a nice trip!!")
+                }
            
             }
    
@@ -154,6 +167,7 @@ class HomeController : UIViewController{
             let mapItem = MKMapItem(placemark: placemark)
             self.setCustomRegion(withType: .destination, coordinates: trip.destinatioCoordinates)
             self.generatePolyline(toDestination: mapItem)
+            self.mapView.zoomToFit(annotations: self.mapView.annotations)
         }
     }
     
@@ -161,7 +175,7 @@ class HomeController : UIViewController{
 
         guard let location = locationManager?.location else{return}
 //        Service.shared.fetchDrivers(location: location)
-        Service.shared.fetchDrivers(location: location) { (driver) in
+        PassengerService.shared.fetchDrivers(location: location) { (driver) in
             guard let coordinate = driver.location?.coordinate else {return}
 //            print("DEBUG: Sucess annotation")
 //            print("DEBUG: Sucess annotation \(coordinate)")
@@ -197,58 +211,45 @@ class HomeController : UIViewController{
             
         }
     }
+    
+    //MARK: Driver API
     func observeTrips(){
         
-        Service.shared.observeTrips { (trip) in
+        DriverService.shared.observeTrips { (trip) in
             self.trip = trip
         }
     }
     
-    func fetchUserData(){
-        guard let currnetUid = Auth.auth().currentUser?.uid else {return}
-        Service.shared.fetchUserData(uid: currnetUid) { (user) in
-            self.user = user
-        }
-    }
+    //MARK: Shared API
     
-    func checkIfUserIsLoggedIn(){
-        
-        if Auth.auth().currentUser?.uid == nil{
-            
-            DispatchQueue.main.async {
-                 let navController = UINavigationController(rootViewController: LoginController())
-                if #available(iOS 13, *){
-                    navController.isModalInPresentation = true
-                }
-                navController.modalPresentationStyle = .fullScreen
-                self.present(navController, animated: true, completion: nil)
-            }
-           
-        }
-        else{
-          configure()
-        }
-        
-    }
+//    func fetchUserData(){
+//        guard let currnetUid = Auth.auth().currentUser?.uid else {return}
+//        Service.shared.fetchUserData(uid: currnetUid) { (user) in
+//            self.user = user
+//        }
+//    }
     
-    func signOut(){
-        
-        do{
-            try Auth.auth().signOut()
-            
-            DispatchQueue.main.async {
-                 let navController = UINavigationController(rootViewController: LoginController())
-                if #available(iOS 13, *){
-                    navController.isModalInPresentation = true
-                }
-                navController.modalPresentationStyle = .fullScreen
-                self.present(navController, animated: true, completion: nil)
-            }
-        }
-        catch{
-            print("Error to sign out user")
-        }
-    }
+//    func checkIfUserIsLoggedIn(){
+//
+//        if Auth.auth().currentUser?.uid == nil{
+//
+//            DispatchQueue.main.async {
+//                 let navController = UINavigationController(rootViewController: LoginController())
+//                if #available(iOS 13, *){
+//                    navController.isModalInPresentation = true
+//                }
+//                navController.modalPresentationStyle = .fullScreen
+//                self.present(navController, animated: true, completion: nil)
+//            }
+//
+//        }
+//        else{
+//          configure()
+//        }
+//
+//    }
+    
+   
     
     //MARK: Hnadlers
     
@@ -257,7 +258,7 @@ class HomeController : UIViewController{
         switch actioonButtonConfig{
             
         case .showMenu:
-            print("DEBUG Show Menu")
+            delegate?.handleMenuToggle()
         case .dismissActionView:
            removeAnnotationAndOverlay()
             mapView.showAnnotations(mapView.annotations, animated: true)
@@ -272,12 +273,12 @@ class HomeController : UIViewController{
     
     //MARK: Helper Functions
     
-    func configure(){
-        configureUI()
-        fetchUserData()
-//        fetchDrivers()
-        
-    }
+//    func configure(){
+//        configureUI()
+////        fetchUserData()
+////        fetchDrivers()
+//        
+//    }
     
    fileprivate func configureActionButton(config: ActionbuttonConfiguration){
        switch config{
@@ -725,7 +726,7 @@ extension HomeController : RideActionViewDelegate{
     }
     
     func cancelTrip() {
-        Service.shared.cancelTrip { (error, ref) in
+        PassengerService.shared.deleteTrip { (error, ref) in
             if let error = error{
                 print("Debug: Error deleting trip... \(error.localizedDescription)")
                 return
@@ -748,7 +749,7 @@ extension HomeController : RideActionViewDelegate{
         guard let destiantionCoordinate = view.destination?.coordinate else {return}
         
         shouldPresentLoadingView(true, message: "Finding you a ride")
-        Service.shared.uploadTrip(pickUpCoordinate, destiantionCoordinate) { (error, ref) in
+        PassengerService.shared.uploadTrip(pickUpCoordinate, destiantionCoordinate) { (error, ref) in
             if let error = error{
                 
                 print("DEBUG: \(error.localizedDescription)")
@@ -787,7 +788,7 @@ extension HomeController : PickUpControllerDelegate {
         generatePolyline(toDestination: mapItem)
         
         mapView.zoomToFit(annotations: mapView.annotations)
-        Service.shared.observeTripCancelled(trip: trip) {
+        DriverService.shared.observeTripCancelled(trip: trip) {
             
             self.removeAnnotationAndOverlay()
             self.animateRideActionView(shouldShow: false)

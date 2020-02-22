@@ -19,6 +19,9 @@
 		C9A3C1EE23E27D98008A0915 /* RideActionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A3C1ED23E27D98008A0915 /* RideActionView.swift */; };
 		C9A3C1F223E37F57008A0915 /* Trip.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A3C1F123E37F57008A0915 /* Trip.swift */; };
 		C9A3C1F423EA6AD9008A0915 /* PickUpController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A3C1F323EA6AD9008A0915 /* PickUpController.swift */; };
+		C9A3E10B240097DF004B7650 /* MenuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A3E10A240097DF004B7650 /* MenuController.swift */; };
+		C9A3E10D2400987A004B7650 /* ContainerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A3E10C2400987A004B7650 /* ContainerController.swift */; };
+		C9A3E10F2400A1EC004B7650 /* MenuHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A3E10E2400A1EC004B7650 /* MenuHeader.swift */; };
 		C9D6988F23DB60A500D6C23E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D6988E23DB60A500D6C23E /* AppDelegate.swift */; };
 		C9D6989123DB60A500D6C23E /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D6989023DB60A500D6C23E /* SceneDelegate.swift */; };
 		C9D6989623DB60A500D6C23E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C9D6989423DB60A500D6C23E /* Main.storyboard */; };
@@ -45,6 +48,9 @@
 		C9A3C1ED23E27D98008A0915 /* RideActionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideActionView.swift; sourceTree = "<group>"; };
 		C9A3C1F123E37F57008A0915 /* Trip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trip.swift; sourceTree = "<group>"; };
 		C9A3C1F323EA6AD9008A0915 /* PickUpController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickUpController.swift; sourceTree = "<group>"; };
+		C9A3E10A240097DF004B7650 /* MenuController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuController.swift; sourceTree = "<group>"; };
+		C9A3E10C2400987A004B7650 /* ContainerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerController.swift; sourceTree = "<group>"; };
+		C9A3E10E2400A1EC004B7650 /* MenuHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuHeader.swift; sourceTree = "<group>"; };
 		C9D6988B23DB60A500D6C23E /* UberClone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UberClone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9D6988E23DB60A500D6C23E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C9D6989023DB60A500D6C23E /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -87,6 +93,24 @@
 				76E1E663C25273FEA66FE322 /* Pods-UberClone.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		C9A3E1082400978D004B7650 /* Authentication */ = {
+			isa = PBXGroup;
+			children = (
+				C9D698A823DB63AD00D6C23E /* LoginController.swift */,
+				C9D698AC23DBC0AB00D6C23E /* SignUpController.swift */,
+			);
+			path = Authentication;
+			sourceTree = "<group>";
+		};
+		C9A3E10924009793004B7650 /* SideMenu */ = {
+			isa = PBXGroup;
+			children = (
+				C9A3E10A240097DF004B7650 /* MenuController.swift */,
+				C9A3E10C2400987A004B7650 /* ContainerController.swift */,
+			);
+			path = SideMenu;
 			sourceTree = "<group>";
 		};
 		C9D6988223DB60A500D6C23E = {
@@ -146,8 +170,8 @@
 		C9D698A523DB615C00D6C23E /* Controller */ = {
 			isa = PBXGroup;
 			children = (
-				C9D698A823DB63AD00D6C23E /* LoginController.swift */,
-				C9D698AC23DBC0AB00D6C23E /* SignUpController.swift */,
+				C9A3E10924009793004B7650 /* SideMenu */,
+				C9A3E1082400978D004B7650 /* Authentication */,
 				C90B2B8223DCB5ED009A0EBE /* HomeController.swift */,
 				C9A3C1F323EA6AD9008A0915 /* PickUpController.swift */,
 			);
@@ -162,6 +186,7 @@
 				C90B2B8623DD30A7009A0EBE /* LocationInputView.swift */,
 				C90B2B8823DE0E06009A0EBE /* LocationCell.swift */,
 				C9A3C1ED23E27D98008A0915 /* RideActionView.swift */,
+				C9A3E10E2400A1EC004B7650 /* MenuHeader.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -315,7 +340,10 @@
 				C9A3C1F423EA6AD9008A0915 /* PickUpController.swift in Sources */,
 				C9D698A923DB63AD00D6C23E /* LoginController.swift in Sources */,
 				C90B2B8923DE0E06009A0EBE /* LocationCell.swift in Sources */,
+				C9A3E10B240097DF004B7650 /* MenuController.swift in Sources */,
 				C90B2B8F23DE9D2C009A0EBE /* LocationHandler.swift in Sources */,
+				C9A3E10D2400987A004B7650 /* ContainerController.swift in Sources */,
+				C9A3E10F2400A1EC004B7650 /* MenuHeader.swift in Sources */,
 				C9D6989123DB60A500D6C23E /* SceneDelegate.swift in Sources */,
 				C9A3C1EE23E27D98008A0915 /* RideActionView.swift in Sources */,
 				C90B2B8D23DE93A1009A0EBE /* User.swift in Sources */,

@@ -21,12 +21,24 @@ struct User{
     var accountType : AccountType!
     let uid : String
     var location : CLLocation?
+    var homeLocation : String?
+    var workLocation: String?
+    
+    var firstInitial : String { return String(fullname.prefix(1))}
     
     init(uid:String ,dictionary: [String:Any]) {
         self.uid = uid
         self.fullname = dictionary["fullname"] as? String ?? ""
         self.email = dictionary["email"] as? String ?? ""
-//        self.accountType = dictionary["accountType"] as? Int ?? 0
+        
+        if let home  = dictionary["homeLocation"] as? String {
+            
+            self.homeLocation = home
+        }
+        if let work  = dictionary["workLocation"] as? String {
+            
+            self.workLocation = work
+        }
         
         if let index = dictionary["accountType"] as? Int{
             

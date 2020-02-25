@@ -43,6 +43,7 @@ class HomeController : UIViewController{
     private var searchResults = [MKPlacemark]()
     private var actioonButtonConfig = ActionbuttonConfiguration()
     private var route : MKRoute?
+    private var savedLocations = [MKPlacemark]()
     
     private final let locationInputViewHeight : CGFloat = 200
     private final let rideActionViewHeight : CGFloat = 300
@@ -58,6 +59,7 @@ class HomeController : UIViewController{
                 fetchDrivers()
                 configureLocationActivationView()
                 observeCurrentTrip()
+                configureSavedLocation()
             }
             else{
                 observeTrips()
@@ -104,6 +106,7 @@ class HomeController : UIViewController{
 //        checkIfUserIsLoggedIn()
         enableLocationService()
         configureUI()
+        
 
 //        signOut()
         
@@ -123,6 +126,15 @@ class HomeController : UIViewController{
                 
             case .requested:
                 break
+            case .denied:
+                self.shouldPresentLoadingView(false)
+                self.presentAlertController(withMessage: "Oops", withTitle: "Could not find driver. Try Agian")
+                PassengerService.shared.deleteTrip { (err, ref) in
+                    self.centerMapOnUserLocation()
+                    self.configureActionButton(config: .showMenu)
+                    self.inputActivationView.alpha = 1
+                    self.removeAnnotationAndOverlay()
+                }
             case .accepted:
                 self.shouldPresentLoadingView(false)
                 self.removeAnnotationAndOverlay()
@@ -291,6 +303,31 @@ class HomeController : UIViewController{
            actioonButtonConfig = .dismissActionView
            
    }
+    }
+    
+    func configureSavedLocation(){
+        guard let user = user else {
+            return
+        }
+        
+        savedLocations.removeAll()
+        if let homeLocation = user.homeLocation{
+            geacoderAddressString(address: homeLocation)
+        }
+        if let workLocation = user.workLocation{
+            geacoderAddressString(address: workLocation)
+        }
+    }
+    
+    func geacoderAddressString(address : String){
+        let geocode = CLGeocoder()
+        geocode.geocodeAddressString(address) { (placemarks, err) in
+            guard let clPlacemark = placemarks?.first else {return}
+            let placemark = MKPlacemark(placemark: clPlacemark)
+            self.savedLocations.append(placemark)
+            self.tableView.reloadData()
+        }
+        
     }
     
     func configureUI(){
@@ -646,7 +683,7 @@ extension HomeController : LocationInputViewDelegate{
 
 extension HomeController : UITableViewDelegate,UITableViewDataSource{
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return "Test"
+        return section == 0 ? "Saved Location" : "Results"
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -654,12 +691,15 @@ extension HomeController : UITableViewDelegate,UITableViewDataSource{
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return section == 0 ? 2 : searchResults.count
+        return section == 0 ? savedLocations.count : searchResults.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath) as! LocationCell
+        if indexPath.section == 0 {
+            cell.placemark = savedLocations[indexPath.row]
+        }
         
         if indexPath.section == 1{
             
@@ -670,7 +710,9 @@ extension HomeController : UITableViewDelegate,UITableViewDataSource{
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let selectedPlaceMark = searchResults[indexPath.row]
+        
+        
+        let selectedPlaceMark = indexPath.section == 0 ? savedLocations[indexPath.row] : searchResults[indexPath.row]
 //        var annotations = [MKAnnotation]()
 
         self.configureActionButton(config: .dismissActionView)

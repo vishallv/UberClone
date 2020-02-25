@@ -1,29 +1,19 @@
 //
-//  MenuHeader.swift
+//  UserInfoHeader.swift
 //  UberClone
 //
-//  Created by Vishal Lakshminarayanappa on 2/21/20.
+//  Created by Vishal Lakshminarayanappa on 2/22/20.
 //  Copyright © 2020 Vishal Lakshminarayanappa. All rights reserved.
 //
 
 import UIKit
 
-
-
-
-class MenuHeader : UIView{
+class UserInfoHeader : UIView{
+    
     //MARK: Properties
-    
-//    var user : User? {
-//        didSet{
-//            fullnameLabel.text = user?.fullname
-//            emailLabel.text = user?.email
-//        }
-//    }
-    
     private let user : User
     
-    private lazy var profileImageView : UIView = {
+   private lazy var profileImageView : UIView = {
         let view = UIView()
         view.addSubview(initialLabel)
         initialLabel.centerX(inView: view)
@@ -42,34 +32,36 @@ class MenuHeader : UIView{
         return label
         
     }()
+       
+       private lazy var fullnameLabel :UILabel = {
+           let label = UILabel()
+           label.font = UIFont.systemFont(ofSize: 16)
+           label.text = user.fullname
+           return label
+       }()
+       
+       private lazy var  emailLabel :UILabel = {
+           let label = UILabel()
+           label.font = UIFont.systemFont(ofSize: 14)
+           label.textColor = .lightGray
+           label.text = user.email
+           return label
+       }()
     
-    private lazy var fullnameLabel :UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 16)
-        label.textColor = .white
-        label.text = user.fullname
-        return label
-    }()
-    
-    private lazy var  emailLabel :UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14)
-        label.textColor = .lightGray
-        label.text = user.email
-        return label
-    }()
     //MARK: Life Cycles
     
     init(user:User, frame: CGRect){
         self.user = user
         super.init(frame: frame)
         
-        backgroundColor = .backgroundColor
+        backgroundColor = .white
         
         addSubview(profileImageView)
-        profileImageView.anchor(top: topAnchor,left: leftAnchor,
-                                paddingTop: 4,paddingLeft: 4,
-                                width: 64,height: 64)
+//        profileImageView.anchor(top: topAnchor,left: leftAnchor,
+//                                paddingTop: 4,paddingLeft: 4,
+//                                width: 64,height: 64)
+        profileImageView.setDimensions(height: 64, width: 64)
+        profileImageView.centerY(inView: self, leftAnchor: leftAnchor, paddingLeft: 16)
         profileImageView.layer.cornerRadius = 32
         
         let stack = UIStackView(arrangedSubviews: [fullnameLabel,emailLabel])
@@ -82,16 +74,10 @@ class MenuHeader : UIView{
         
     }
     
-//    override init(frame: CGRect) {
-//        super.init(frame: frame)
-//        
-//        
-//        
-//    }
-    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
     //MARK: Selectors
     
     //MARK: Helper Functions

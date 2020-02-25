@@ -163,6 +163,15 @@ class ContainerController: UIViewController{
         }, completion: nil)
     }
 }
+
+extension ContainerController : SettingControllerDelegate{
+    func updateUser(_ controller: SettingController) {
+        self.user = controller.user
+    }
+    
+    
+}
+
 //MARK: HomeControllerDelegate
 extension ContainerController : HomeControllerDelegate{
     func handleMenuToggle() {
@@ -182,7 +191,16 @@ extension ContainerController: MenuControllerDelegate{
             case .yourTrips:
                 break
             case .settings:
-                break
+                guard let user = self.user else {return}
+                let controller = SettingController(user: user)
+                controller.delegate = self
+                let nav = UINavigationController(rootViewController: controller)
+                
+                if #available(iOS 13.0, *){
+                    nav.isModalInPresentation = true
+                }
+                nav.modalPresentationStyle = .fullScreen
+                self.present(nav, animated: true, completion: nil)
             case .logOut:
                 let alert = UIAlertController(title: nil, message: "Are you sure you want to log out?", preferredStyle: .actionSheet)
                 

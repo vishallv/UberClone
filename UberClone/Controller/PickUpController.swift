@@ -91,14 +91,19 @@ class PickUpController :UIViewController {
         circularProgressView.animatePulsatingLayer()
         circularProgressView.setProgressWithAnimation(duration: 5, value: 0) {
            
-            Service.shared.updateTripState(trip: self.trip, state: .denied) { (err, ref) in
-                 self.dismiss(animated: true, completion: nil)
-            }
+            
+            //few change in code to prevent bug
+//            Service.shared.updateTripState(trip: self.trip, state: .denied) { (err, ref) in
+//                 self.dismiss(animated: true, completion: nil)
+//            }
         }
     }
     
     @objc func handleDismissal(){
-        dismiss(animated: true, completion: nil)
+        Service.shared.updateTripState(trip: self.trip, state: .denied) { (err, ref) in
+             self.dismiss(animated: true, completion: nil)
+        }
+//        dismiss(animated: true, completion: nil)
     }
     
     @objc func handleAcceptTrip(){
